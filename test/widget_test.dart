@@ -74,6 +74,41 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
+  // Phones, small/large tablets (portrait + landscape), foldables, desktop web.
+  for (final size in const [
+    Size(375, 667), // small phone (iPhone SE 2nd/3rd gen)
+    Size(430, 932), // large phone
+    Size(673, 841), // foldable unfolded
+    Size(768, 1024), // iPad portrait
+    Size(1366, 1024), // iPad Pro 12.9 landscape
+    Size(1280, 800), // Android tablet landscape
+    Size(1920, 1080), // desktop browser
+  ]) {
+    testWidgets('layout works at ${size.width.toInt()}x${size.height.toInt()}', (tester) async {
+      tester.view.physicalSize = size * 2;
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      final s = await _state();
+      await tester.pumpWidget(_app(s));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(tester.takeException(), isNull);
+      final wide = size.width >= 840;
+      expect(find.byType(NavigationRail), wide ? findsOneWidget : findsNothing);
+      expect(find.byType(NavigationBar), wide ? findsNothing : findsOneWidget);
+      for (final tab in ['Daily', 'Collection', 'Achievements', 'Profile', 'Home']) {
+        await tester.tap(find.text(tab).last);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(tester.takeException(), isNull, reason: '$tab at $size');
+      }
+      await tester.tap(find.text('Play'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.takeException(), isNull, reason: 'play at $size');
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 2));
+    });
+  }
+
   testWidgets('settings and shop open', (tester) async {
     final s = await _state();
     await tester.pumpWidget(_app(s));
