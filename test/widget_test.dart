@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:game_020_crossy_road_adventure/app/app_state.dart';
 import 'package:game_020_crossy_road_adventure/app/bootstrap.dart';
+import 'package:game_020_crossy_road_adventure/app/screens/settings.dart';
+import 'package:game_020_crossy_road_adventure/app/screens/shop.dart';
 import 'package:game_020_crossy_road_adventure/app/services/ads.dart';
 import 'package:game_020_crossy_road_adventure/app/services/audio.dart';
 import 'package:game_020_crossy_road_adventure/app/services/purchases.dart';
@@ -110,17 +112,42 @@ void main() {
   }
 
   testWidgets('settings and shop open', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
     final s = await _state();
     await tester.pumpWidget(_app(s));
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(find.byIcon(Icons.settings));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Settings'), findsWidgets);
-    await tester.pageBack();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byIcon(Icons.storefront));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Restore purchases'), findsOneWidget);
+
+    String texts() => tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
+        .where((t) => t.isNotEmpty)
+        .join(' | ');
+
+    final settings = find.byTooltip('Settings');
+    expect(settings, findsOneWidget, reason: texts());
+    await tester.tap(settings);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(SettingsScreen), findsOneWidget, reason: texts());
+    expect(tester.takeException(), isNull);
+
+    Navigator.of(tester.element(find.byType(SettingsScreen))).pop();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    final shop = find.byTooltip('Shop');
+    expect(shop, findsOneWidget, reason: texts());
+    await tester.tap(shop);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(ShopScreen), findsOneWidget, reason: texts());
+    // The restore button sits at the end of the list (store policy: it must exist).
+    await tester.scrollUntilVisible(find.text('Restore purchases'), 300,
+        scrollable: find.descendant(of: find.byType(ShopScreen), matching: find.byType(Scrollable)).first);
+    expect(find.text('Restore purchases'), findsOneWidget, reason: texts());
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

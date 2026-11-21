@@ -1,11 +1,18 @@
-name: iOS build (manual)
+name: iOS build
 
-# macOS runners cost 10x Linux minutes, so this runs only on demand
-# or for release tags.
+# Runs on every push to main (macOS runners are free for public
+# repositories), on release tags and on demand. If the repository is made
+# private again, macOS minutes cost 10x Linux minutes: remove the
+# `branches` line to keep iOS builds for tags / manual runs only.
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ["v*"]
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
