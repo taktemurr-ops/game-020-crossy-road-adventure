@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_020_crossy_road_adventure/core/arcade.dart';
-import 'package:game_020_crossy_road_adventure/core/level_plan.dart';
+import 'package:studio_core/core/arcade.dart';
+import 'package:studio_core/core/level_plan.dart';
 import 'package:game_020_crossy_road_adventure/game/crossy_engine.dart';
 import 'package:game_020_crossy_road_adventure/game/rules.dart';
 
